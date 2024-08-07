@@ -5,7 +5,7 @@ const authRouter = require('./routes/authRoutes');
 const app = express();
 const fileUpload  =require('express-fileupload')
 app.use(fileUpload({
-    useTempFiles: true,
+    useTempFiles: false,
     
 }))
 require('dotenv').config();

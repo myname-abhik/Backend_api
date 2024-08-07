@@ -86,18 +86,33 @@ exports.upload =  async(req, res , next)=>{
         const file = req.files.photo
         const user = await User.findOne({email: req.body.email})
 if(user){
-    cloudinary.uploader.upload(file.tempFilePath, async (error, result) => {
-      await  User.updateOne(
-            { email:  req.body.email },
-             {$set: { photo: result.secure_url  }},
-        )
-        res.status(200).json({
-            status : "success",
-            message : req.body.name,
-            photo : result.secure_url
-        })
-    }) 
-}
+    const uploadStream = () => {
+        return new Promise((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream((error, result) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(result);
+                }
+            });
+            stream.end(file.data);
+        });
+    };
+
+    const result = await uploadStream();
+
+    await User.updateOne(
+        { email: req.body.email },
+        { $set: { photo: result.secure_url } }
+    );
+
+    res.status(200).json({
+        status: "success",
+        message: req.body.name,
+        photo: result.secure_url
+    });
+} 
+
 }
     catch
     {
